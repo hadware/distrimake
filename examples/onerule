@@ -1,0 +1,3 @@
+all : file1 file2
+	cat test.txt
+	cat test.txt
