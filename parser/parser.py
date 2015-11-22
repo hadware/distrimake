@@ -1,6 +1,7 @@
 import re
 from enum import Enum
-from .ast import MakeFile, MakeFileRule, Command
+
+from syntax_tree import MakeFile, MakeFileRule, Command
 
 
 class ParsingError(Exception):
@@ -29,8 +30,8 @@ def parse_mkfilerule_head(makefile_tree, line_no, line_string):
     except:
         raise ParsingError(line_no, " Invalid Makefile rule head")
         #transforming targets into symbols
-    target = makefile_tree.target_factory(target)
-    dependencies = [makefile_tree.target_factory(dep.strip()) for dep in dependencies.split()]
+    target = makefile_tree.symbol_factory(target)
+    dependencies = [makefile_tree.symbol_factory(dep.strip()) for dep in dependencies.split()]
 
     return MakeFileRule(target, dependencies)
 
@@ -42,7 +43,7 @@ def parse_makefile(makefile_filepath):
 
     with open(makefile_filepath, "r") as makefile:
         automata = AutomataState.OUTSIDERULE
-        makefile_tree = MakeFile()
+        makefile_tree = MakeFile(makefile_filepath)
         current_rule = None
 
         for line_no, current_line in enumerate(makefile.readlines()):
