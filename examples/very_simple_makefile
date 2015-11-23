@@ -1,5 +1,5 @@
 all : file1.txt file2.txt
-	cat test.txt
+	cat file1.txt file2.txt > test.txt
 
 file1.txt :
 	touch file1.txt

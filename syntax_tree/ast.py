@@ -16,11 +16,23 @@ class MakeFileRule:
     def add_command(self, command):
         self.commands.append(command)
 
+    def __str__(self):
+        return "%s : %s \n %s" % (self.target.name,
+                                  " ".join([str(dep) for dep in self.dependencies]),
+                                  "\n".join([str(command) for command in self.commands]))
+
+    def print_header(self):
+        """Outputs only the header of the rule"""
+        return "%s <- %s" % (self.target.name, " ".join([str(dep) for dep in self.dependencies]))
+
 class Command:
     """Stores a command"""
 
     def __init__(self, content):
         self.content = content
+
+    def __str__(self):
+        return self.content
 
 
 class Symbol:
@@ -35,13 +47,16 @@ class Symbol:
     def __hash__(self):
         return hash(self.name)
 
+    def __str__(self):
+        return self.name
+
 class MakeFile:
     """Stores the whole tree of the makefile, with a hashmap to solve dependencies"""
 
     def __init__(self, makefile_folder):
         self.symbols = set()
         self.ruletable = {} # keys : symbols, values : rules
-        self._scheduler = None
+        self.scheduler = None
         self.makefile_folder = makefile_folder
 
     def add_rule(self, rule):
@@ -63,7 +78,7 @@ class MakeFile:
         passes it its ruletable, and checks if the specified rulename actually exists"""
         target_symbol = Symbol(target_name)
         if target_symbol in self.ruletable:
-            self._scheduler = Scheduler(self.ruletable, target_symbol, self.makefile_folder)
+            self.scheduler = Scheduler(self.ruletable, target_symbol, self.makefile_folder)
         else:
             raise MakeError("Can't find target rule")
 

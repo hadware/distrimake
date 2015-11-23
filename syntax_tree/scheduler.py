@@ -13,6 +13,11 @@ class AllJobsCompleted(SchedulerException):
 class JobAlreadyDone(SchedulerException):
     pass
 
+class HigherLevelJobsStillRunning(SchedulerException):
+    """Raised when the master process wants to get a job, but there are still jobs running on a higher level,
+    which could create dependency problems"""
+    pass
+
 class Job:
     """Stores everything the master process needs to assign jobs to slaves processes:
     - The rule (with the commands to be ran)
@@ -26,8 +31,11 @@ class Job:
 
     def create_file_deps(self, makefile_folder):
         self.dependency_filepaths = [join(makefile_folder, dep.name)
-                                     for dep in [self.rule.dependencies]
+                                     for dep in self.rule.dependencies
                                      if isfile(join(makefile_folder, dep.name))]
+
+    def __str__(self):
+        return "Job on lvl %i, rule : [%s]" % (self.level, self.rule.print_header())
 
 class Scheduler():
 
@@ -43,6 +51,13 @@ class Scheduler():
         # used afterward to store jobs taken by the master process
         self.running_jobs = []
 
+    @property
+    def total_pending_jobs(self):
+        return sum(len(joblist) for joblist in self.pending_jobs_tbl.values())
+
+    @property
+    def total_running_jobs(self):
+        return len(self.running_jobs)
 
     def _check_if_tg_required(self, tg_symbol):
         """Checks if the rule associated with tg_symbol should be ran or not. It's true if:
@@ -83,7 +98,7 @@ class Scheduler():
         #iterative algorithm, recusive is cool, but we're engineers not researchers
 
         if self._check_if_tg_required(symbol): #init with the make target
-            self.pending_jobs_tbl[0] = Job(self.rule_table[symbol], 0)
+            self.pending_jobs_tbl[0] = [Job(self.rule_table[symbol], 0)]
         else:
             raise NothingToBeDone()
 
@@ -102,7 +117,13 @@ class Scheduler():
 
             current_job_lvl += 1
 
-        self.pending_job_lvl = current_job_lvl - 1 # compensating for the extra + 1
+        # cleaning up the last empty level(s)
+        for lvl in reversed(list(self.pending_jobs_tbl.keys())):
+            if not self.pending_jobs_tbl[lvl]:
+                del self.pending_jobs_tbl[lvl]
+            else:
+                self.pending_job_lvl = lvl  # used to remember which level was the last
+                break
 
 
     def get_job(self):
@@ -110,9 +131,13 @@ class Scheduler():
         Retrieves a job from the job table, puts it in the running job list,
         and returns it"""
         if not self.pending_jobs_tbl[self.pending_job_lvl]:
-            self.pending_job_lvl -= 1
+            if self.running_jobs:
+                raise HigherLevelJobsStillRunning()
+            else:
+                self.pending_job_lvl -= 1
         if self.pending_job_lvl == -1:
             raise AllJobsCompleted()
+
 
         job = self.pending_jobs_tbl[self.pending_job_lvl].pop()
         job.create_file_deps(self.makefile_folder)
@@ -126,3 +151,14 @@ class Scheduler():
             self.running_jobs.remove(finished_job)
         else:
             raise JobAlreadyDone()
+
+    def print_pending_jobs(self):
+        result_str = "Pending obs for makefile %s, total # : %i" % (self.makefile_folder, self.total_pending_jobs)
+        for lvl, joblist in self.pending_jobs_tbl.items():
+            result_str += "\n%i jobs on lvl %i:\n" % (len(joblist), lvl)
+            result_str += "\n".join(["\t- " + str(job) for job in joblist])
+
+        return result_str
+
+    def print_running_jobs(self):
+        return "%i jobs running : \n %s" % (self.total_running_jobs, "\n".join(["\t- " + str(job) for job in self.running_jobs]))
