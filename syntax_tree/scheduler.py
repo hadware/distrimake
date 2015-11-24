@@ -1,3 +1,4 @@
+import logging
 from os.path import isfile, join, getctime
 
 
@@ -96,6 +97,7 @@ class Scheduler():
         builds the jobs table for that rule"""
 
         #iterative algorithm, recusive is cool, but we're engineers not researchers
+        logging.info("Building dependencies for rule %s" % str(symbol))
 
         if self._check_if_tg_required(symbol): #init with the make target
             self.pending_jobs_tbl[0] = [Job(self.rule_table[symbol], 0)]
@@ -124,7 +126,8 @@ class Scheduler():
             else:
                 self.pending_job_lvl = lvl  # used to remember which level was the last
                 break
-
+        logging.info("Finished building dependencies. Found %i jobs, dispatched on % levels"
+                     % (self.total_pending_jobs, self.pending_job_lvl + 1))
 
     def get_job(self):
         """Called by the master to retrieve a job from the scheduler.
@@ -142,6 +145,7 @@ class Scheduler():
         job = self.pending_jobs_tbl[self.pending_job_lvl].pop()
         job.create_file_deps(self.makefile_folder)
         self.running_jobs.append(job)
+        logging.debug("Retrieved job for target %s" % str(job.rule.target))
         return job
 
     def finish_job(self, finished_job):
@@ -151,6 +155,7 @@ class Scheduler():
             self.running_jobs.remove(finished_job)
         else:
             raise JobAlreadyDone()
+        logging.debug("Finished job for target %s" % str(finished_job.rule.target))
 
     def print_pending_jobs(self):
         result_str = "Pending obs for makefile %s, total # : %i" % (self.makefile_folder, self.total_pending_jobs)

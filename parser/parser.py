@@ -1,3 +1,4 @@
+import logging
 import re
 from enum import Enum
 
@@ -40,6 +41,7 @@ def parse_makefile(makefile_filepath):
         - parses the file
         - returns a MakeFile syntax tree
     """
+    logging.info("Parsing makefile %s" % makefile_filepath)
 
     with open(makefile_filepath, "r") as makefile:
         automata = AutomataState.OUTSIDERULE
@@ -77,5 +79,5 @@ def parse_makefile(makefile_filepath):
         #in case the automata was still INRULE,"dump" the last rule to the MakeFile
         if automata == AutomataState.INRULE:
             makefile_tree.add_rule(current_rule)
-
+    logging.info("Finished parsing the makefile")
     return makefile_tree
