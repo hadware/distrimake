@@ -61,7 +61,7 @@ class SSHConnection(RemoteConnection):
 
 class Host:
 
-    def __init__(self, **kwargs):
+    def __init__(self, name, **kwargs):
 
         if kwargs.get("key"):
             self.credentials = SSHCredentials(SSHCredentials.CredentialsType.KEY, kwargs.get("key"))

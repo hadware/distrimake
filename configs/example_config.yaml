@@ -7,17 +7,19 @@ included_files :
   - louistoutnu.avi
   - whyvimsucks.txt
 
+distributed_run : yes
+
 # hosts the makefile should be distributed to
 hosts :
   - host1 :
-    domain : h1.domain.net
-    remote_location : ~/test/
-    login : hadware
-    password : louispd
+      domain : h1.domain.net
+      remote_location : ~/test/
+      login : hadware
+      password : louispd
   - host2:
-    domain : h2.domain.net
-    key : .ssh/id_rsa
+      domain : h2.domain.net
+      key : .ssh/id_rsa
   - host3:
-    domain : h3.domain.net
-    remote_location : ~/test/
-    key : .ssh/id_rsa
+      domain : h3.domain.net
+      remote_location : ~/test/
+      key : .ssh/id_rsa
