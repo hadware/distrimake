@@ -1,0 +1,23 @@
+# path to the makefile file that should be ran
+mkfile_path : examples/premier/Makefile
+
+# path to files contained in the makefile's folder that should be uploaded
+included_files :
+  - premier
+  - louistoutnu.avi
+  - whyvimsucks.txt
+
+# hosts the makefile should be distributed to
+hosts :
+  - host1 :
+    domain : h1.domain.net
+    remote_location : ~/test/
+    login : hadware
+    password : louispd
+  - host2:
+    domain : h2.domain.net
+    key : .ssh/id_rsa
+  - host3:
+    domain : h3.domain.net
+    remote_location : ~/test/
+    key : .ssh/id_rsa
