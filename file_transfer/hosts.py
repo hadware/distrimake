@@ -1,18 +1,20 @@
+import logging
+
+import __main__
 from enum import Enum
-from os.path import isfile, join, realpath
+from os.path import isfile, join, realpath, dirname
 from paramiko import AutoAddPolicy, SSHClient
 from pysftp import Connection
 
 """This module describes the host class, which handles remote SSH commands and SFTP file transfers to
 the slave host"""
 
-VENV_ACTIVATE_COMMAND = "pyvenv venv"
+VENV_ACTIVATE_COMMAND = "source venv/bin/activate"
 PYRO_SLAVE_RUN_COMMAND = ""
 VENV_SETUP_COMMANDS=[
+    "virtualenv -p /usr/bin/python3 venv",
     VENV_ACTIVATE_COMMAND,
-    "source venv/bin/activate"
     "pip3 install pyro4",
-    PYRO_SLAVE_RUN_COMMAND
 ]
 
 
@@ -26,6 +28,9 @@ class MissingDomain(FileTransferError):
     pass
 
 class FailingConnection(FileTransferError):
+    pass
+
+class UnknownRemoteLocation(FileTransferError):
     pass
 
 class SSHCredentials:
@@ -72,8 +77,9 @@ class RemoteConnection:
 
 class SFTPConnection(RemoteConnection):
 
-    def __init__(self, credentials, domain):
+    def __init__(self, credentials, domain, remote_location):
         super().__init__(credentials, domain)
+        self.remote_location = remote_location
 
     def connect(self):
         try:
@@ -86,7 +92,12 @@ class SFTPConnection(RemoteConnection):
         except:
             FailingConnection("SFTP connection failing")
         finally:
+            try:
+                self.client.chdir(self.remote_location)
+            except FileNotFoundError:
+                raise UnknownRemoteLocation("Remote folder can't be found")
             self.status = self.Status.CONNECTED
+
 
 
 class SSHConnection(RemoteConnection):
@@ -150,11 +161,12 @@ class Host:
         except KeyError:
             raise MissingDomain("Can't find the domain or ip address in the host config file for host %s" % name)
 
-        self.sftp_connection = SFTPConnection(self.credentials, self.domain)
+        self.sftp_connection = SFTPConnection(self.credentials, self.domain, self.remote_location)
         self.ssh_connection = SSHConnection(self.credentials, self.domain)
 
     @needs_connection(ConnectionType.SFTP)
     def send_files(self, files_list):
+        """Sends a list of file to the slave's host over SFTP"""
         if not isinstance(files_list, list):
             # could be just a single file, let's change that
             files = [files_list]
@@ -162,12 +174,31 @@ class Host:
             files = files_list
 
         for file in files:
-            self.sftp_connection.client.put(join(self.remote_location, file))
+            self.sftp_connection.client.put(file)
+
+    @needs_connection(ConnectionType.SFTP)
+    def get_files(self, files_list, local_folder=None):
+        """retrieves a list of file from the slave's host over SFTP"""
+        if not isinstance(files_list, list):
+            # could be just a single file, let's change that
+            files = [files_list]
+        else:
+            files = files_list
+
+        for file in files:
+            if local_folder is None:
+                self.sftp_connection.client.get(file)
+            else:
+                self.sftp_connection.client.get(file, localpath=local_folder)
 
     @needs_connection(ConnectionType.SSH)
     def send_ssh_command(self, ssh_command):
         """Sends a SSH command to the host"""
-        return self.ssh_connection.client.exec_command(ssh_command)
+        stdin, stdout, stderr = self.ssh_connection.client.exec_command(ssh_command)
+        stdout = stdout.read()
+        stderr = stderr.read()
+        logging.debug("remote command : %s \nstdout : %s\ndterr : %s" % (ssh_command, stdout, stderr))
+        return (stdout, stderr)
 
     @needs_connection(ConnectionType.SFTP)
     def check_venv_setup(self):
@@ -178,15 +209,24 @@ class Host:
     @needs_connection(ConnectionType.SFTP)
     @needs_connection(ConnectionType.SSH)
     def deploy_remote_venv(self):
-        """Sets up the venv needed to run the makefile"""
+        """Sets up:
+        - python venv needed to run the slave
+        - the additional files needed for the makefile commands, specified in the config file
+        ACTHUNG: also cd's into the remote location directory"""
+
         self.send_ssh_command("cd %s" % self.remote_location)
         if self.check_venv_setup():
             self.send_ssh_command(VENV_ACTIVATE_COMMAND)
-            self.send_ssh_command(PYRO_SLAVE_RUN_COMMAND)
         else:
             for command in VENV_SETUP_COMMANDS:
                 self.send_ssh_command(command)
+
         #this is done to find the real local path of the slave name
-        slave_path = join(dirname(__file__), "slave.py")
+        slave_path = join(dirname(__main__.__file__), "slave.py")
         self.send_files(slave_path)
-        # TODO : Deploy the needed additionary files
+        # TODO : Deploy the needed additional files
+
+    @needs_connection(ConnectionType.SSH)
+    def run_slave(self):
+        """Starts the slave worker on the remote machine"""
+        self.send_ssh_command("python3 slave.py")
