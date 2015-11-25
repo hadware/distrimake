@@ -18,8 +18,10 @@ hosts :
       password : louispd
   - host2:
       domain : h2.domain.net
+      login : loulou
       key : .ssh/id_rsa
   - host3:
       domain : h3.domain.net
       remote_location : ~/test/
+      login : loulou
       key : .ssh/id_rsa

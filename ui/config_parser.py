@@ -1,8 +1,9 @@
 """"The YAML config parser and singleton class, reachable by any object needing it"""
-from os.path import isfile, join
+from os.path import isfile, join, expanduser
 import yaml
 
-from file_transfer import Host
+from file_transfer import Host, FileTransferError
+
 
 class ConfigError(Exception):
     pass
@@ -19,7 +20,6 @@ class WrongHostConfig(ConfigError):
 class Singleton(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):
-        print(super(Singleton, cls).__class__)
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
@@ -51,10 +51,14 @@ class ConfigParser(metaclass=Singleton):
             hosts_list = list()
             for host_config in self.config_data["hosts"]:
                 try :
-                    host_name, host_config = host_config.popitem("name")
+                    host_name, host_config = host_config.popitem()
+                    if host_config.get("key") and "~" in host_config["key"]:
+                        host_config["key"] = expanduser(host_config["key"])
                     hosts_list.append(Host(host_name, **host_config))
                 except KeyError:
-                    raise WrongHostConfig
+                    raise WrongHostConfig()
+                except FileTransferError as err:
+                    raise err
 
             return hosts_list
         else:
