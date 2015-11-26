@@ -10,7 +10,10 @@ from pysftp import Connection
 the slave host"""
 
 VENV_ACTIVATE_COMMAND = "source venv/bin/activate"
-PYRO_SLAVE_RUN_COMMAND = ""
+PYRO_SLAVE_RUN_COMMANDS= [
+    VENV_ACTIVATE_COMMAND,
+    "python3 slave.py",
+]
 VENV_SETUP_COMMANDS=[
     "virtualenv -p /usr/bin/python3 venv",
     VENV_ACTIVATE_COMMAND,
@@ -119,6 +122,9 @@ class SSHConnection(RemoteConnection):
             FailingConnection("SSH connection failing")
         finally:
             self.status = self.Status.CONNECTED
+            self.shell = self.client.invoke_shell()
+            self.shell_stdin = self.shell.makefile('wb')
+            self.shell_stdout = self.shell.makefile('rb')
 
 
 def needs_connection(type):
@@ -163,6 +169,10 @@ class Host:
 
         self.sftp_connection = SFTPConnection(self.credentials, self.domain, self.remote_location)
         self.ssh_connection = SSHConnection(self.credentials, self.domain)
+
+    def disconnect(self):
+        self.sftp_connection.disconnect()
+        self.ssh_connection.disconnect()
 
     @needs_connection(ConnectionType.SFTP)
     def send_files(self, files_list):
@@ -214,12 +224,16 @@ class Host:
         - the additional files needed for the makefile commands, specified in the config file
         ACTHUNG: also cd's into the remote location directory"""
 
-        self.send_ssh_command("cd %s" % self.remote_location)
+        final_command = "cd %s;" % self.remote_location
+        #self.send_ssh_command("cd %s" % self.remote_location)
         if self.check_venv_setup():
-            self.send_ssh_command(VENV_ACTIVATE_COMMAND)
+            # self.send_ssh_command(VENV_ACTIVATE_COMMAND)
+            final_command += VENV_ACTIVATE_COMMAND + " ;"
         else:
             for command in VENV_SETUP_COMMANDS:
-                self.send_ssh_command(command)
+                # self.send_ssh_command(command)
+                final_command += command + " ; "
+        self.send_ssh_command(final_command)
 
         #this is done to find the real local path of the slave name
         slave_path = join(dirname(__main__.__file__), "slave.py")
@@ -229,4 +243,7 @@ class Host:
     @needs_connection(ConnectionType.SSH)
     def run_slave(self):
         """Starts the slave worker on the remote machine"""
-        self.send_ssh_command("python3 slave.py")
+        self.send_ssh_command("cd %s; %s;%s;" %
+                              (self.remote_location,
+                               PYRO_SLAVE_RUN_COMMANDS[0],
+                               PYRO_SLAVE_RUN_COMMANDS[1]))
