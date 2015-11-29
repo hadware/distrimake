@@ -32,6 +32,7 @@ class ConfigParser(metaclass=Singleton):
             self.config_data = yaml.load(config_file)
 
         self.mkfile_filepath = self.config_data.get("mkfile_path", "")
+        self.mk_target = self.config_data.get("mk_target", "all")
         self.distributed_run = self.config_data.get("distributed_run", True)
         self.included_files_list = self.config_data.get("included_files", [])
         if self.distributed_run and self.config_data.get("hosts") is None:
