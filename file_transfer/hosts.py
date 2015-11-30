@@ -94,7 +94,7 @@ class SFTPConnection(RemoteConnection):
                                          password=self.credentials.password)
         except:
             FailingConnection("SFTP connection failing")
-        finally:
+        else:
             try:
                 self.client.chdir(self.remote_location)
             except FileNotFoundError:
@@ -120,7 +120,7 @@ class SSHConnection(RemoteConnection):
                                     password=self.credentials.password)
         except:
             FailingConnection("SSH connection failing")
-        finally:
+        else:
             self.status = self.Status.CONNECTED
             self.shell = self.client.invoke_shell()
             self.shell_stdin = self.shell.makefile('wb')
