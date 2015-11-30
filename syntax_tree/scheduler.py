@@ -38,6 +38,9 @@ class Job:
     def __str__(self):
         return "Job on lvl %i, rule : [%s]" % (self.level, self.rule.print_header())
 
+    def __hash__(self):
+        return
+
 class Scheduler():
 
     def __init__(self, rule_table, target_symbol, makefile_folder):
@@ -64,7 +67,7 @@ class Scheduler():
         """Checks if the rule associated with tg_symbol should be ran or not. It's true if:
         - The target isn't an existing file (then it's a rule, or a file that needs to be created)
         - One of the rule's dependencies isn't a file
-        - One of the rule's dependency isn't a file, and has a more recent timestamp
+        - One of the rule's dependency is a file, and has a more recent timestamp
         """
 
         # checking if it's a file
@@ -81,12 +84,13 @@ class Scheduler():
                 if getctime(dep_filepath) > getctime(tg_filepath): # checking the timestamp
                     return True
             else:
+                # Assuming that the Makefile is valid and the required file "dependency" is a target of another rule
                 return True
 
         return False
 
     def _create_job(self, tg_symbol, job_level):
-        """Adds the job the the pending job table, checking beforehand that
+        """Adds the job to the pending job table, checking beforehand that
         the symbol isn't just a required file and not a rule's target"""
         if tg_symbol in self.rule_table:
             self.pending_jobs_tbl[job_level].append(Job(self.rule_table[tg_symbol],
@@ -140,7 +144,6 @@ class Scheduler():
                 self.pending_job_lvl -= 1
         if self.pending_job_lvl == -1:
             raise AllJobsCompleted()
-
 
         job = self.pending_jobs_tbl[self.pending_job_lvl].pop()
         job.create_file_deps(self.makefile_folder)
