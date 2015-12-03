@@ -4,21 +4,7 @@ import syntax_tree as st
 from sys import argv
 from parser import parse_makefile
 from os.path import join, dirname, isabs
-
-DISPATCHER_NAME = 'distrimake.dispatcher'
-
-
-class DispatcherException(Exception):
-    pass
-
-
-class NoJobAvailableYet(DispatcherException):
-    pass
-
-
-class AllJobsCompleted(DispatcherException):
-    pass
-
+from slave import AllJobsCompleted, DISPATCHER_NAME, NoJobAvailableYet
 
 class Dispatcher(object):
     def __init__(self, config_file):
@@ -57,9 +43,11 @@ class Dispatcher(object):
             pass
 
     def request_file(self, file_names, slave_name):
+        """Tells the dispatcher to send over files needed to complete the job"""
         self.map_host[slave_name].send_files(file_names)
 
     def upload_file(self, file_names, slave_name, local_path=None):
+        """Tells the dispatcher to retrieve the target file after the job is done"""
         self.map_host[slave_name].get_files(file_names, local_folder=local_path)
 
 
