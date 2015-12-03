@@ -1,6 +1,4 @@
 import logging
-
-import __main__
 from enum import Enum
 from os.path import isfile, join, realpath, dirname
 from paramiko import AutoAddPolicy, SSHClient
@@ -240,14 +238,16 @@ class Host:
         self.send_ssh_command(final_command)
 
         #this is done to find the real local path of the slave name
-        slave_path = join(dirname(__main__.__file__), "slave.py")
-        self.send_files(slave_path)
+        slave_path = join(dirname(__file__), "../slave.py")
+        exception_path = join(dirname(__file__), "../exceptions.py")
+
+        self.send_files([slave_path, exception_path])
         # TODO : Deploy the needed additional files
 
     @needs_connection(ConnectionType.SSH)
     def run_slave(self):
         """Starts the slave worker on the remote machine"""
-        self.send_ssh_command("cd %s; %s; %s %s &;" %
+        return self.send_ssh_command("cd %s; %s; %s %s" %
                               (self.remote_location,
                                PYRO_SLAVE_RUN_COMMANDS[0],
                                PYRO_SLAVE_RUN_COMMANDS[1],

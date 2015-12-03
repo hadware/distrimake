@@ -4,7 +4,9 @@ import syntax_tree as st
 from sys import argv
 from parser import parse_makefile
 from os.path import join, dirname, isabs
-from slave import AllJobsCompleted, DISPATCHER_NAME, NoJobAvailableYet
+from exceptions import NoJobAvailableYet, AllJobsCompleted
+from slave import DISPATCHER_NAME
+
 
 class Dispatcher(object):
     def __init__(self, config_file):
@@ -53,6 +55,7 @@ class Dispatcher(object):
 
 # main program
 def main_dispatcher():
+
     ns = Pyro4.naming.locateNS()
     daemon = Pyro4.core.Daemon()
 
@@ -61,6 +64,7 @@ def main_dispatcher():
     ns.register(DISPATCHER_NAME, uri)
 
     print("Dispatcher initialised and registered.")
+    print(AllJobsCompleted.__module__)
     daemon.requestLoop()
 
 if __name__ == '__main__':

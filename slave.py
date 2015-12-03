@@ -5,20 +5,9 @@ import sys
 from time import sleep
 import Pyro4.core
 import subprocess
+from exceptions import NoJobAvailableYet, AllJobsCompleted
 
 DISPATCHER_NAME = 'distrimake.dispatcher'
-
-
-class DispatcherException(Exception):
-    pass
-
-
-class NoJobAvailableYet(DispatcherException):
-    pass
-
-
-class AllJobsCompleted(DispatcherException):
-    pass
 
 
 class Slave:
@@ -59,7 +48,7 @@ if __name__ == "__main__":
 
     name = sys.argv[1]
     logging.basicConfig(filename=("%s.log" % name), level=logging.DEBUG)
-
+    print(AllJobsCompleted.__module__)
     worker = Slave(name)
     worker.run()
 

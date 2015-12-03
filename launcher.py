@@ -1,7 +1,6 @@
 import Pyro4
 from ui import ConfigParser
 from time import sleep
-from ui.arg_parser import init_config_from_argv
 from multiprocessing import Process
 from subprocess import Popen
 from sys import argv
@@ -10,22 +9,29 @@ import dispatcher as dis
 
 NS_CMD = "pyro4-ns"
 
+# Pyro4.config.SERIALIZER = 'pickle'
+
 
 class BadUsage(Exception):
     pass
 
 
 def send_command(host, i):
-    print(host.run_slave())
+    host.deploy_remote_venv()
+    stdout, stderr = (host.run_slave())
+    print("%d : --------- stderr --------------->" % i)
+    print(stderr.decode("utf-8"))
+    print("%d : --------- stdout --------------->" % i)
+    print(stdout.decode("utf-8"))
 
 
-def set_up_slaves(processes):
-    init_config_from_argv()
-    config = ConfigParser()
+def set_up_slaves(processes, config_file):
+    config = ConfigParser(config_file)
     hosts = config.build_hosts()
 
     for i, host in enumerate(hosts):
         p = Process(target=send_command, args=(host, i))
+
         p.start()
         processes.append(p)
     print("Launched all processes")
@@ -80,7 +86,7 @@ if __name__ == "__main__":
         print("NS launched and located.")
 
         # launch dispatcher
-        disp_p = Popen(["/usr/bin/python3.4",
+        disp_p = Popen(["/usr/bin/python3",
                         join(dirname(abspath(__file__)), "dispatcher.py"),
                         config_file])
 
@@ -94,7 +100,7 @@ if __name__ == "__main__":
         print("Dispatcher ready. Launching slaves.")
 
         processes = []
-        set_up_slaves(processes)
+        set_up_slaves(processes, config_file)
         for proc in processes:
             proc.join()
         print("Done all processes")
