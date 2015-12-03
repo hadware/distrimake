@@ -171,6 +171,9 @@ class Host:
         self.sftp_connection = SFTPConnection(self.credentials, self.domain, self.remote_location)
         self.ssh_connection = SSHConnection(self.credentials, self.domain)
 
+    def __del__(self):
+        self.disconnect()
+
     def disconnect(self):
         self.sftp_connection.disconnect()
         self.ssh_connection.disconnect()
@@ -244,7 +247,7 @@ class Host:
     @needs_connection(ConnectionType.SSH)
     def run_slave(self):
         """Starts the slave worker on the remote machine"""
-        self.send_ssh_command("cd %s; %s;%s;" %
+        self.send_ssh_command("cd %s; %s;%s &;" %
                               (self.remote_location,
                                PYRO_SLAVE_RUN_COMMANDS[0],
                                PYRO_SLAVE_RUN_COMMANDS[1]))
