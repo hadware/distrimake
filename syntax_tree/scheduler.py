@@ -1,5 +1,7 @@
 import logging
 from os.path import isfile, join, getctime
+import subprocess
+
 
 
 class SchedulerException(Exception):
@@ -35,11 +37,13 @@ class Job:
                                      for dep in self.rule.dependencies
                                      if isfile(join(makefile_folder, dep.name))]
 
+    def execute(self):
+        for cmd in self.rule.commands:
+            subprocess.check_output(cmd)
+
     def __str__(self):
         return "Job on lvl %i, rule : [%s]" % (self.level, self.rule.print_header())
 
-    def __hash__(self):
-        return
 
 class Scheduler():
 
@@ -53,7 +57,7 @@ class Scheduler():
         self._build_dep(target_symbol)
 
         # used afterward to store jobs taken by the master process
-        self.running_jobs = []
+        self.running_jobs = dict()
 
     @property
     def total_pending_jobs(self):
@@ -93,8 +97,8 @@ class Scheduler():
         """Adds the job to the pending job table, checking beforehand that
         the symbol isn't just a required file and not a rule's target"""
         if tg_symbol in self.rule_table:
-            self.pending_jobs_tbl[job_level].append(Job(self.rule_table[tg_symbol],
-                                                        job_level))
+            self.pending_jobs_tbl[job_level] = [Job(self.rule_table[tg_symbol],
+                                                    job_level)]
 
     def _build_dep(self, symbol):
         """Takes a symbol as an input, which corresponds to a rule, and
@@ -104,7 +108,7 @@ class Scheduler():
         logging.info("Building dependencies for rule %s" % str(symbol))
 
         if self._check_if_tg_required(symbol): #init with the make target
-            self.pending_jobs_tbl[0] = [Job(self.rule_table[symbol], 0)]
+            self._create_job(symbol, 0)
         else:
             raise NothingToBeDone()
 
@@ -115,7 +119,7 @@ class Scheduler():
             found_new_deps_flag = False # Has to be raised for the next iteration of the look to run
             self.pending_jobs_tbl[current_job_lvl + 1] = []
 
-            for job in self .pending_jobs_tbl[current_job_lvl]:
+            for job in self.pending_jobs_tbl[current_job_lvl]:
                 for dep_symbol in job.rule.dependencies:
                     if self._check_if_tg_required(dep_symbol):
                         self._create_job(dep_symbol, current_job_lvl + 1)
@@ -147,15 +151,15 @@ class Scheduler():
 
         job = self.pending_jobs_tbl[self.pending_job_lvl].pop()
         job.create_file_deps(self.makefile_folder)
-        self.running_jobs.append(job)
+        self.running_jobs[job.rule.target] = job
         logging.debug("Retrieved job for target %s" % str(job.rule.target))
         return job
 
     def finish_job(self, finished_job):
         """Called by the master when a job has terminated. Tells the
         scheduler that the job has been finished"""
-        if finished_job in self.running_jobs:
-            self.running_jobs.remove(finished_job)
+        if self.running_jobs[finished_job.rule.target]:
+            self.running_jobs.remove(finished_job.rule.target)
         else:
             raise JobAlreadyDone()
         logging.debug("Finished job for target %s" % str(finished_job.rule.target))
@@ -169,4 +173,4 @@ class Scheduler():
         return result_str
 
     def print_running_jobs(self):
-        return "%i jobs running : \n %s" % (self.total_running_jobs, "\n".join(["\t- " + str(job) for job in self.running_jobs]))
+        return "%i jobs running : \n %s" % (self.total_running_jobs, "\n".join(["\t- " + str(job) for target, job in self.running_jobs]))

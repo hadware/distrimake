@@ -79,6 +79,7 @@ class MakeFile:
         target_symbol = Symbol(target_name)
         if target_symbol in self.ruletable:
             self.scheduler = Scheduler(self.ruletable, target_symbol, self.makefile_folder)
+            return self.scheduler
         else:
             raise MakeError("Can't find target rule")
 
