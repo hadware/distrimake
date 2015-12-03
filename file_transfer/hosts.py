@@ -247,7 +247,8 @@ class Host:
     @needs_connection(ConnectionType.SSH)
     def run_slave(self):
         """Starts the slave worker on the remote machine"""
-        self.send_ssh_command("cd %s; %s;%s &;" %
+        self.send_ssh_command("cd %s; %s; %s %s &;" %
                               (self.remote_location,
                                PYRO_SLAVE_RUN_COMMANDS[0],
-                               PYRO_SLAVE_RUN_COMMANDS[1]))
+                               PYRO_SLAVE_RUN_COMMANDS[1],
+                               self.name))
