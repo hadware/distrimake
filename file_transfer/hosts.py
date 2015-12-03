@@ -145,6 +145,7 @@ def needs_connection(type):
 class Host:
 
     def __init__(self, name, **kwargs):
+        self.name = name
 
         if kwargs.get("login"):
             if kwargs.get("key"):
