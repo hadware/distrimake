@@ -1,5 +1,4 @@
 paramiko == 1.16.0
-pyPEG2 == 2.15.2
 pysftp == 0.2.8
 Pyro4 == 4.40
 PyYAML == 3.11
