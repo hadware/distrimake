@@ -6,10 +6,11 @@ from subprocess import Popen
 from sys import argv
 from os.path import isfile, join, dirname, abspath
 import dispatcher as dis
+from os import environ
 
-NS_CMD = "pyro4-ns"
+NS_CMD = ["pyro4-ns"]
 
-# Pyro4.config.SERIALIZER = 'pickle'
+Pyro4.config.SERIALIZER = 'pickle'
 
 
 class BadUsage(Exception):
@@ -72,10 +73,13 @@ if __name__ == "__main__":
         print_usage()
         exit(-1)
 
+    ns_p = None
     try:
         if not check_ns_present():
             # launch ns
-            ns_p = Popen([NS_CMD])
+            env = environ.copy()
+            env['PYRO_SERIALIZERS_ACCEPTED'] = "serpent,json,marshal,pickle"
+            ns_p = Popen(NS_CMD, env=env)
             print("NS launched.")
 
             # check the ns is correctly set up

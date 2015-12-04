@@ -13,6 +13,8 @@ DISPATCHER_NAME = 'distrimake.dispatcher'
 class Slave:
     def __init__(self, name):
         self.name = name
+
+        Pyro4.config.SERIALIZER = 'pickle'
         self.dispatcher = Pyro4.Proxy("PYRONAME:%s" % DISPATCHER_NAME)
         logging.debug("Dispatcher acquired")
 
@@ -21,6 +23,7 @@ class Slave:
             try:
                 job = self.dispatcher.get_work()
             except NoJobAvailableYet:
+                logging.debug("No job available yet, sleeping 2s.")
                 sleep(2)
             except AllJobsCompleted:
                 logging.debug("All work completed, exiting.")
@@ -33,13 +36,13 @@ class Slave:
         logging.debug("Getting files : [%s]" % ', '.join(job.dependency_filepaths))
         self.dispatcher.request_file(job.dependency_filepaths, self.name)
         try:
-            logging.debug("Executing job : %s" % '; '.join(job.rule.commands))
+            logging.debug("Executing job : %s" % ('; '.join([cmd.__str__() for cmd in job.rule.commands])))
             job.execute()
         except subprocess.CalledProcessError as e:
             logging.error(e.output)
         else:
             logging.debug("Uploading target : %s" % job.rule.target)
-            self.dispatcher.upload_file(job.rule.target)
+            self.dispatcher.upload_file(job.rule.target.__str__(), self.name)
 
 
 if __name__ == "__main__":

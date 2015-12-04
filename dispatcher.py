@@ -8,6 +8,7 @@ from exceptions import NoJobAvailableYet, AllJobsCompleted
 from slave import DISPATCHER_NAME
 
 
+
 class Dispatcher(object):
     def __init__(self, config_file):
         config = ConfigParser(config_file)
@@ -56,6 +57,9 @@ class Dispatcher(object):
 # main program
 def main_dispatcher():
 
+    Pyro4.config.SERIALIZER = 'pickle'
+    Pyro4.config.SERIALIZERS_ACCEPTED = ['pickle']
+
     ns = Pyro4.naming.locateNS()
     daemon = Pyro4.core.Daemon()
 
@@ -68,4 +72,5 @@ def main_dispatcher():
     daemon.requestLoop()
 
 if __name__ == '__main__':
+
     main_dispatcher()

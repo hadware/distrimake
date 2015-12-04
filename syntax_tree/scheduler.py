@@ -39,7 +39,7 @@ class Job:
 
     def execute(self):
         for cmd in self.rule.commands:
-            subprocess.check_output(cmd)
+            subprocess.check_output(cmd.__str__(), shell=True)
 
     def __str__(self):
         return "Job on lvl %i, rule : [%s]" % (self.level, self.rule.print_header())

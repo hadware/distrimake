@@ -240,8 +240,12 @@ class Host:
         #this is done to find the real local path of the slave name
         slave_path = join(dirname(__file__), "../slave.py")
         exception_path = join(dirname(__file__), "../exceptions.py")
+        syntax_tree = join(dirname(__file__), "../syntax_tree/")
 
         self.send_files([slave_path, exception_path])
+        if not self.sftp_connection.client.isdir("syntax_tree"):
+            self.sftp_connection.client.mkdir("syntax_tree")
+        self.sftp_connection.client.put_d(syntax_tree, "syntax_tree")
         # TODO : Deploy the needed additional files
 
     @needs_connection(ConnectionType.SSH)
