@@ -97,8 +97,10 @@ class Scheduler():
         """Adds the job to the pending job table, checking beforehand that
         the symbol isn't just a required file and not a rule's target"""
         if tg_symbol in self.rule_table:
-            self.pending_jobs_tbl[job_level] = [Job(self.rule_table[tg_symbol],
-                                                    job_level)]
+            if len(self.pending_jobs_tbl) <= job_level:
+                self.pending_jobs_tbl[job_level] = []
+            self.pending_jobs_tbl[job_level].append(Job(self.rule_table[tg_symbol],
+                                                    job_level))
 
     def _build_dep(self, symbol):
         """Takes a symbol as an input, which corresponds to a rule, and
@@ -141,6 +143,9 @@ class Scheduler():
         """Called by the master to retrieve a job from the scheduler.
         Retrieves a job from the job table, puts it in the running job list,
         and returns it"""
+        if self.pending_job_lvl == -1:
+            raise AllJobsCompleted()
+
         if not self.pending_jobs_tbl[self.pending_job_lvl]:
             if self.running_jobs:
                 raise HigherLevelJobsStillRunning()
@@ -158,8 +163,8 @@ class Scheduler():
     def finish_job(self, finished_job):
         """Called by the master when a job has terminated. Tells the
         scheduler that the job has been finished"""
-        if self.running_jobs[finished_job.rule.target]:
-            self.running_jobs.remove(finished_job.rule.target)
+        if len(self.running_jobs) != 0:
+            self.running_jobs.pop(finished_job.rule.target, None)
         else:
             raise JobAlreadyDone()
         logging.debug("Finished job for target %s" % str(finished_job.rule.target))
@@ -173,4 +178,5 @@ class Scheduler():
         return result_str
 
     def print_running_jobs(self):
-        return "%i jobs running : \n %s" % (self.total_running_jobs, "\n".join(["\t- " + str(job) for target, job in self.running_jobs]))
+        return "%i jobs running : \n %s" % (self.total_running_jobs, "\n".join(["\t- " + str(job) for job
+                                                                                in self.running_jobs.values()]))

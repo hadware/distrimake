@@ -1,5 +1,5 @@
 from datetime import datetime
-from sys import executable
+from os.path import isfile
 import logging
 import sys
 from time import sleep
@@ -42,7 +42,9 @@ class Slave:
             logging.error(e.output)
         else:
             logging.debug("Uploading target : %s" % job.rule.target)
-            self.dispatcher.upload_file(job.rule.target.__str__(), self.name)
+            if isfile(job.rule.target.__str__()):
+                self.dispatcher.upload_file(job.rule.target.__str__(), self.name)
+            self.dispatcher.put_result(job)
 
 
 if __name__ == "__main__":
