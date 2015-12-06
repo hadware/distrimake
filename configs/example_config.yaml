@@ -1,13 +1,11 @@
-# path to the makefile file that should be ran
-mkfile_path : examples/premier/Makefile
-# target to be ran
+# path to the makefile file that should be ran, relative to this file, or an absolute path
+mkfile_path : ../examples/premier/Makefile
+# target to be ran in the makefile
 mk_target : all
 
 # path to files contained in the makefile's folder that should be uploaded
 included_files :
   - premier
-  - louistoutnu.avi
-  - whyvimsucks.txt
 
 distributed_run : yes
 

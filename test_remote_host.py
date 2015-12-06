@@ -13,7 +13,7 @@ if __name__ == "__main__":
     #print(test_host[0].send_ssh_command("pwd")[0])
     for host in test_host:
         host.deploy_remote_venv()
-        host.run_slave()
+        # host.run_slave()
     print("ok")
     for host in test_host:
         host.disconnect()

@@ -14,20 +14,12 @@ class Dispatcher(object):
         config = ConfigParser(config_file)
 
         # init scheduler for task list
-        makefile = parse_makefile(
-            self._get_makefile_path(config_file, config.mkfile_filepath))
+        makefile = parse_makefile(config.mkfile_filepath)
         self.scheduler = makefile.build_deps(config.mk_target)
 
         self.map_host = {}
         for host in config.build_hosts():
             self.map_host[host.name] = host
-
-    @staticmethod
-    def _get_makefile_path(config_file, mkfile_filepath):
-        if isabs(mkfile_filepath):
-            return mkfile_filepath
-        else:
-            return join(dirname(config_file), mkfile_filepath)
 
     def get_work(self):
         try:
