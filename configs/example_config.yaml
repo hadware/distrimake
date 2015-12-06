@@ -5,8 +5,8 @@ mk_target : all
 
 # path to files contained in the makefile's folder that should be uploaded
 included_files :
-  - premier
-
+  -README
+master_ip : 127.0.0.1
 distributed_run : yes
 
 # hosts the makefile should be distributed to

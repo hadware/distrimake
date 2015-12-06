@@ -5,6 +5,7 @@ mk_target : all
 
 # path to files contained in the makefile's folder that should be uploaded
 included_files :
+  - README
 
 distributed_run : yes
 
