@@ -14,7 +14,7 @@ if __name__ == "__main__":
     for host in test_host:
         print(host.send_ssh_command("touch ahas.txt")[0])
         host.deploy_remote_venv()
-        host.run_slave()
+        # host.run_slave()
     print("ok")
     for host in test_host:
         host.disconnect()

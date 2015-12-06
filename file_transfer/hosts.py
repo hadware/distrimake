@@ -4,6 +4,8 @@ from os.path import isfile, join, realpath, dirname
 from paramiko import AutoAddPolicy, SSHClient
 from pysftp import Connection
 
+import ui
+
 """This module describes the host class, which handles remote SSH commands and SFTP file transfers to
 the slave host"""
 
@@ -247,7 +249,9 @@ class Host:
         if not self.sftp_connection.client.isdir("syntax_tree"):
             self.sftp_connection.client.mkdir("syntax_tree")
         self.sftp_connection.client.put_d(syntax_tree, "syntax_tree")
-        # TODO : Deploy the needed additional files
+
+        # sending the makefile's required files
+        self.send_files(ui.ConfigParser().included_files)
 
     @needs_connection(ConnectionType.SSH)
     def run_slave(self, ns_hostname):

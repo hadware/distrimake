@@ -1,9 +1,8 @@
 """"The YAML config parser and singleton class, reachable by any object needing it"""
-from os.path import isfile, join, expanduser
+from os.path import isfile, join, expanduser, isabs, dirname
 import yaml
 
-from file_transfer import Host, FileTransferError
-
+import file_transfer
 
 class ConfigError(Exception):
     pass
@@ -31,7 +30,13 @@ class ConfigParser(metaclass=Singleton):
         with open(config_file_path, 'r') as config_file:
             self.config_data = yaml.load(config_file)
 
-        self.mkfile_filepath = self.config_data.get("mkfile_path", "")
+        makefile_path_config_value = self.config_data.get("mkfile_path", "Makefile")
+        if isabs(makefile_path_config_value):
+            self.mkfile_filepath = makefile_path_config_value
+        else:
+            self.mkfile_filepath = join(dirname(config_file_path), makefile_path_config_value)
+        self.makefile_dirname = dirname(self.mkfile_filepath)
+
         self.mk_target = self.config_data.get("mk_target", "all")
         self.distributed_run = self.config_data.get("distributed_run", True)
         self.included_files_list = self.config_data.get("included_files", [])
@@ -40,11 +45,12 @@ class ConfigParser(metaclass=Singleton):
 
     @property
     def included_files(self):
+        """Returns a list of the included files, checking if they exist"""
         for filename in self.included_files_list:
-            if not isfile(join(self.mkfile_filepath, filename)):
+            if not isfile(join(self.makefile_dirname, filename)):
                 raise MissingIncludedFile("A listed included file cannot be found")
 
-        return [join(self.mkfile_filepath, filename) for filename in self.included_files_list]
+        return [join(self.makefile_dirname, filename) for filename in self.included_files_list]
 
     def build_hosts(self):
         """Returns a list of hosts object, from the config file"""
@@ -55,10 +61,10 @@ class ConfigParser(metaclass=Singleton):
                     host_name, host_config = host_config.popitem()
                     if host_config.get("key") and "~" in host_config["key"]:
                         host_config["key"] = expanduser(host_config["key"])
-                    hosts_list.append(Host(host_name, **host_config))
+                    hosts_list.append(file_transfer.Host(host_name, **host_config))
                 except KeyError:
                     raise WrongHostConfig()
-                except FileTransferError as err:
+                except file_transfer.FileTransferError as err:
                     raise err
 
             return hosts_list
