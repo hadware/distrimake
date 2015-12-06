@@ -242,17 +242,18 @@ class Host:
         exception_path = join(dirname(__file__), "../exceptions.py")
         syntax_tree = join(dirname(__file__), "../syntax_tree/")
 
-        self.send_files([slave_path, exception_path])
+        #self.sftp_connection.client.chdir(self.remote_location)
+        print(self.send_files([slave_path, exception_path]))
         if not self.sftp_connection.client.isdir("syntax_tree"):
             self.sftp_connection.client.mkdir("syntax_tree")
         self.sftp_connection.client.put_d(syntax_tree, "syntax_tree")
         # TODO : Deploy the needed additional files
 
     @needs_connection(ConnectionType.SSH)
-    def run_slave(self):
+    def run_slave(self, ns_hostname):
         """Starts the slave worker on the remote machine"""
-        return self.send_ssh_command("cd %s; %s; %s %s" %
+        return self.send_ssh_command("cd %s; %s; %s %s %s" %
                               (self.remote_location,
                                PYRO_SLAVE_RUN_COMMANDS[0],
                                PYRO_SLAVE_RUN_COMMANDS[1],
-                               self.name))
+                               self.name, ns_hostname))

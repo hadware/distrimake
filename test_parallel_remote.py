@@ -9,7 +9,9 @@ logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 
 def send_command(host, i):
-    print(host.send_ssh_command("sleep file%i.txt" % i)[0])
+    # print(host.send_ssh_command("sleep file%i.txt" % i)[0])
+    print(host.send_ssh_command("touch ahas.txt")[0])
+
 
 if __name__ == "__main__":
     init_config_from_argv()

@@ -15,7 +15,7 @@ class Slave:
         self.name = name
 
         Pyro4.config.SERIALIZER = 'pickle'
-        self.dispatcher = Pyro4.Proxy("PYRONAME:%s" % DISPATCHER_NAME)
+        self.dispatcher = Pyro4.Proxy("PYRONAME:%s" % DISPATCHER_NAME )
         logging.debug("Dispatcher acquired")
 
     def run(self):
@@ -43,6 +43,8 @@ class Slave:
         else:
             logging.debug("Uploading target : %s" % job.rule.target)
             if isfile(job.rule.target.__str__()):
+                print(job.rule.target.__str__())
+
                 self.dispatcher.upload_file(job.rule.target.__str__(), self.name)
             self.dispatcher.put_result(job)
 

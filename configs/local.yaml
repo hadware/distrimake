@@ -8,20 +8,17 @@ included_files :
 
 distributed_run : yes
 
+master_ip : 172.16.18.1
+
 # hosts the makefile should be distributed to
 hosts :
   - host1 :
-      domain : localhost
-      remote_location : test1/
-      login : louis
-      password : yU4j123Db
+      domain : 172.16.18.131
+      remote_location : lm1/
+      login : lm1 #lm1
+      password : test
   - host2 :
-      domain : localhost
-      remote_location : test2/
-      login : louis
-      password : yU4j123Db
-  - host3 :
-      domain : localhost
-      remote_location : test3/
-      login : louis
-      password : yU4j123Db
+      domain : 172.16.18.132
+      remote_location : ubuntu1/
+      login : ubuntu1
+      password : test

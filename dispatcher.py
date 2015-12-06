@@ -60,10 +60,16 @@ def main_dispatcher():
     Pyro4.config.SERIALIZER = 'pickle'
     Pyro4.config.SERIALIZERS_ACCEPTED = ['pickle']
 
-    ns = Pyro4.naming.locateNS()
-    daemon = Pyro4.core.Daemon()
+    if len(argv) != 3:
+        print("Not enough args")
+        exit(-1)
+
+    print(argv[2])
+    ns = Pyro4.naming.locateNS(host=argv[2])
 
     dispatcher = Dispatcher(argv[1])
+    Pyro4.config.HOST = argv[2]
+    daemon = Pyro4.core.Daemon()
     uri = daemon.register(dispatcher)
     ns.register(DISPATCHER_NAME, uri)
 
