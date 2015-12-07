@@ -3,18 +3,17 @@ from enum import Enum
 from os.path import isfile, join, realpath, dirname
 from paramiko import AutoAddPolicy, SSHClient
 from pysftp import Connection
-
 import ui
 
 """This module describes the host class, which handles remote SSH commands and SFTP file transfers to
 the slave host"""
 
 VENV_ACTIVATE_COMMAND = "source venv/bin/activate"
-PYRO_SLAVE_RUN_COMMANDS= [
+PYRO_SLAVE_RUN_COMMANDS = [
     VENV_ACTIVATE_COMMAND,
     "python3 slave.py",
 ]
-VENV_SETUP_COMMANDS=[
+VENV_SETUP_COMMANDS = [
     "virtualenv -p /usr/bin/python3 venv",
     VENV_ACTIVATE_COMMAND,
     "pip3 install pyro4",
@@ -24,20 +23,24 @@ VENV_SETUP_COMMANDS=[
 class FileTransferError(Exception):
     pass
 
+
 class MissingCredentials(FileTransferError):
     pass
+
 
 class MissingDomain(FileTransferError):
     pass
 
+
 class FailingConnection(FileTransferError):
     pass
+
 
 class UnknownRemoteLocation(FileTransferError):
     pass
 
-class SSHCredentials:
 
+class SSHCredentials:
     class CredentialsType(Enum):
         KEY = 1
         PASSWORD = 2
@@ -52,12 +55,13 @@ class SSHCredentials:
         else:
             self.password = args[0]
 
+
 class ConnectionType(Enum):
     SSH = 1
     SFTP = 2
 
-class RemoteConnection:
 
+class RemoteConnection:
     class Status(Enum):
         DISCONNECTED = 1
         CONNECTED = 2
@@ -78,8 +82,8 @@ class RemoteConnection:
             pass
         self.status = self.Status.DISCONNECTED
 
-class SFTPConnection(RemoteConnection):
 
+class SFTPConnection(RemoteConnection):
     def __init__(self, credentials, domain, remote_location):
         super().__init__(credentials, domain)
         self.remote_location = remote_location
@@ -102,9 +106,7 @@ class SFTPConnection(RemoteConnection):
             self.status = self.Status.CONNECTED
 
 
-
 class SSHConnection(RemoteConnection):
-
     def __init__(self, credentials, domain):
         super().__init__(credentials, domain)
         self.client = self.client = SSHClient()
@@ -130,6 +132,7 @@ class SSHConnection(RemoteConnection):
 def needs_connection(type):
     """Decorating function that checks if the sftp connection has been opened before the decorated function runs
     If it hasn't, it'll open it beforehand"""
+
     def wrapper(func):
         def inner_wrapper(*args, **kwargs):
             if type == ConnectionType.SSH:
@@ -139,11 +142,13 @@ def needs_connection(type):
                 if args[0].sftp_connection.status == SFTPConnection.Status.DISCONNECTED:
                     args[0].sftp_connection.connect()
             return func(*args, **kwargs)
+
         return inner_wrapper
+
     return wrapper
 
-class Host:
 
+class Host:
     def __init__(self, name, **kwargs):
         self.name = name
 
@@ -157,7 +162,7 @@ class Host:
                                                   kwargs.get("login"),
                                                   kwargs.get("password"))
             else:
-               raise MissingCredentials("Can't find password or key in the host config file for host %s" % name)
+                raise MissingCredentials("Can't find password or key in the host config file for host %s" % name)
         else:
             raise MissingCredentials("Can't find username in the host config file for host %s" % name)
 
@@ -229,9 +234,9 @@ class Host:
         ACTHUNG: also cd's into the remote location directory"""
 
         final_command = "cd %s;" % self.remote_location
-        #self.send_ssh_command("cd %s" % self.remote_location)
+        # self.send_ssh_command("cd %s" % self.remote_location)
         if self.check_venv_setup():
-            # self.send_ssh_command(VENV_ACTIVATE_COMMAND)
+            #  self.send_ssh_command(VENV_ACTIVATE_COMMAND)
             final_command += VENV_ACTIVATE_COMMAND + " ;"
         else:
             for command in VENV_SETUP_COMMANDS:
@@ -239,12 +244,12 @@ class Host:
                 final_command += command + " ; "
         self.send_ssh_command(final_command)
 
-        #this is done to find the real local path of the slave name
+        # this is done to find the real local path of the slave name
         slave_path = join(dirname(__file__), "../slave.py")
         exception_path = join(dirname(__file__), "../exceptions.py")
         syntax_tree = join(dirname(__file__), "../syntax_tree/")
 
-        #self.sftp_connection.client.chdir(self.remote_location)
+        # self.sftp_connection.client.chdir(self.remote_location)
         print(self.send_files([slave_path, exception_path]))
         if not self.sftp_connection.client.isdir("syntax_tree"):
             self.sftp_connection.client.mkdir("syntax_tree")
@@ -252,12 +257,15 @@ class Host:
 
         # sending the makefile's required files
         self.send_files(ui.ConfigParser().included_files)
+        # files_to_chmod = " ".join(ui.ConfigParser().included_files_list)
+        # self.sftp_connection.client.chmod(files_to_chmod,mode=777)
+
 
     @needs_connection(ConnectionType.SSH)
     def run_slave(self, ns_hostname):
         """Starts the slave worker on the remote machine"""
         return self.send_ssh_command("cd %s; %s; %s %s %s" %
-                              (self.remote_location,
-                               PYRO_SLAVE_RUN_COMMANDS[0],
-                               PYRO_SLAVE_RUN_COMMANDS[1],
-                               self.name, ns_hostname))
+                                     (self.remote_location,
+                                      PYRO_SLAVE_RUN_COMMANDS[0],
+                                      PYRO_SLAVE_RUN_COMMANDS[1],
+                                      self.name, ns_hostname))

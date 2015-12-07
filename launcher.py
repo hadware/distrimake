@@ -8,6 +8,7 @@ from sys import argv
 from os.path import isfile, join, dirname, abspath
 import dispatcher as dis
 from os import environ
+import file_transfer
 
 NS_CMD = ["pyro4-ns", "-n"]
 

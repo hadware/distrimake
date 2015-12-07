@@ -1,11 +1,11 @@
 # path to the makefile file that should be ran
-mkfile_path : ../examples/very_simple_makefile
+mkfile_path : ../examples/premier/Makefile
 # target to be ran
-mk_target : all
+mk_target : list.txt
 
 # path to files contained in the makefile's folder that should be uploaded
 included_files :
-  - README
+  - premier
 
 distributed_run : yes
 
