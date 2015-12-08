@@ -40,6 +40,7 @@ Le fichier de configuration est en YAML, et sert à paramétrer principalement 3
 * les exécutables et fichiers annexes requis par les commandes utilisées à l'intérieur du Makefile
 * les hôtes esclaves, et les identifiants nécessaires pour s'y connecter
 
-Il est aussi judidieux de paramétrer 
+Il est aussi judidieux de paramétrer l'IP de la machine maîtresse au cas où le réseau local ne permet pas
+l'auto-découverte de celle-ci par les esclaves.
 
  

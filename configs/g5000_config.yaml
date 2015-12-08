@@ -1,0 +1,64 @@
+# path to the makefile file that should be ran, relative to this file, or an absolute path
+mkfile_path : ../examples/premier/Makefile
+# target to be ran in the makefile
+mk_target : all
+
+# path to files contained in the makefile's folder that should be uploaded
+included_files :
+  - premier
+
+distributed_run : yes
+
+# hosts the makefile should be distributed to
+hosts :
+  - host1 :
+      domain : adonis-10.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host2 :
+      domain : adonis-5.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host3 :
+      domain : edel-12.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host4 :
+      domain : edel-20.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host5 :
+      domain : edel-28.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host6 :
+      domain : edel-7.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host7 :
+      domain : genepi-12.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host8 :
+      domain : genepi-18.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host9 :
+      domain : genepi-19.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+      password : test
+  - host10 :
+      domain : genepi-22.grenoble.grid5000.fr
+      remote_location : ~
+      login : lvanbeurden
+
+
