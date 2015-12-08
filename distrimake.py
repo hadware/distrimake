@@ -1,14 +1,15 @@
-import Pyro4
-from Pyro4.errors import NamingError
-from ui import ConfigParser
-from time import sleep
 from multiprocessing import Process
+from os import environ
+from os.path import isfile, join, dirname, abspath
 from subprocess import Popen
 from sys import argv
-from os.path import isfile, join, dirname, abspath
+from time import sleep
+
+import Pyro4
+from Pyro4.errors import NamingError
+
 import dispatcher as dis
-from os import environ
-import file_transfer
+from ui import ConfigParser
 
 NS_CMD = ["pyro4-ns", "-n"]
 

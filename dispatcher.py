@@ -1,13 +1,11 @@
-from ui import ConfigParser
-import Pyro4
-import syntax_tree as st
 from sys import argv
+
+import Pyro4
+
+import syntax_tree as st
 from parser import parse_makefile
-from os.path import join, dirname, isabs
-from exceptions import NoJobAvailableYet, AllJobsCompleted
-from slave import DISPATCHER_NAME
-
-
+from ui import ConfigParser
+from daemons import DISPATCHER_NAME, NoJobAvailableYet, AllJobsCompleted
 
 class Dispatcher(object):
     def __init__(self, config_file):

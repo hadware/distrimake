@@ -245,8 +245,8 @@ class Host:
         self.send_ssh_command(final_command)
 
         # this is done to find the real local path of the slave name
-        slave_path = join(dirname(__file__), "../slave.py")
-        exception_path = join(dirname(__file__), "../exceptions.py")
+        slave_path = join(dirname(__file__), "../daemons/slave.py")
+        exception_path = join(dirname(__file__), "../daemons/exceptions.py")
         syntax_tree = join(dirname(__file__), "../syntax_tree/")
 
         # self.sftp_connection.client.chdir(self.remote_location)

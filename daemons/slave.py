@@ -1,11 +1,12 @@
-from datetime import datetime
-from os.path import isfile
 import logging
-import sys
-from time import sleep
-import Pyro4.core
 import subprocess
-from exceptions import NoJobAvailableYet, AllJobsCompleted
+import sys
+from os.path import isfile
+from time import sleep
+
+import Pyro4.core
+
+from .exceptions import NoJobAvailableYet, AllJobsCompleted
 
 DISPATCHER_NAME = 'distrimake.dispatcher'
 
